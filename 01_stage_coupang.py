@@ -11,7 +11,7 @@ def crawl(pageNo):
     result = data.content
     return result
 
-def get_product(li):
+def get_product(li):        
     name = li.find("div", {"class": "name"}).text
     price = li.find("strong", {"class": "price-value"}).text.replace(",", "")
     rate = li.find("span", {"class": "rating-total-count"}).text.replace("(", "").replace(")", "")
@@ -37,7 +37,7 @@ def parse(pageString):
 
 keyword = "신라면"
 products = []
-for pageNo in range(1,10):
+for pageNo in range(1,10):                 # 1. 왜 여기서 범위를 3이상을 하면 되고,  2나 1 하면 안되는지 궁금합니다.
     pageString = crawl(pageNo)
     ddd=parse(pageString)
     products = products + ddd
