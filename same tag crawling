@@ -1,0 +1,57 @@
+import openpyxl as openpyxl
+import requests
+from bs4 import BeautifulSoup
+import json
+import pandas as pd
+openpyxl
+
+def crawl():
+    url = "http://www.keca.or.kr/ecic/ad/ad0101D.do?menuCd=6047&currentPageNo=1&license=13020662&gubun=detail&sido=51&hoeyn=&searchSido=&searchSigungu=&searchGubun=company&searchText=&CSRFToken=8ab9292a-389d-40b3-979a-4a7815959e3a"
+    req = requests.get(url)
+    cont = req.content
+    return cont
+
+
+def parse(fanalPage):
+    soup = BeautifulSoup(fanalPage,"html.parser")
+    bbs = soup.find("div",{"class":"bbs"})
+
+    trs = bbs.findAll("tr")
+    lists = []
+    for tr in trs:
+        nums = tr.findAll("td")
+        for num in nums:
+            info = num.text                  
+            lists.append(info)           #인포를 리스트에 넣고
+
+    dict = {"등록번호":lists[0],          #딕셔너리해서 각각의 값을 불러온다
+            "등록일":lists[1],
+            "관할시도회":lists[2],
+            "상호":lists[3],
+            "대표자":lists[4],
+            "소재지":lists[5],
+            "전화번호":lists[6],
+            "팩스번호":lists[7],
+            "시공능력평가액":lists[8],
+            "지역순위":lists[9],
+            "전국순위":lists[10],
+            }
+    fanal = [dict]                      #그리고 다시 리스트화 한다. ?? 그래야 추가되는 정보를 아래방향으로 저장할수 있네?? 안그러면 옆으로 ??
+    return fanal
+
+
+def save(filename):                      # 파라미터filename 가 파일명 불러오기 코드에는 안먹히네? 
+    file = open("./filename.json","w+")  
+    file.write(json.dumps(filename))
+
+    file = open("./filename.json","w+")
+    df = pd.read_json('./filename.json')
+    df.to_excel('filename.xlsx', sheet_name = 'sheet1')
+
+
+
+fanalPage = crawl()
+fanal = parse(fanalPage)
+save(fanal)
+
+
