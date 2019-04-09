@@ -48,14 +48,14 @@ def parse_2(fanalPage):
             lists.append(info)  # 인포를 리스트에 넣고
 
     dict = {"등록번호": lists[0],  # 딕셔너리해서 각각의 값을 불러온다
-            "등록일":lists[1],
+            "등록일":lists[1].replace(".","-"),,
             "관할시도회": lists[2],
             "상호": lists[3],
             "대표자": lists[4],
             "소재지": lists[5],
             "전화번호": lists[6],
             "팩스번호": lists[7],
-            "시공능력평가액": lists[8],
+            "시공능력평가액": lists[8].replace(" ",""),
             "지역순위": lists[9],
             "전국순위": lists[10],
             }
