@@ -1,25 +1,92 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import time
+import openpyxl as openpyxl
 import pandas as pd
+openpyxl
 
-req = requests.get("http://www.keca.or.kr/ecic/ad/ad0101D.do?menuCd=6047&currentPageNo=1&license=13020662&gubun=detail&sido=51&hoeyn=&searchSido=&searchSigungu=&searchGubun=company&searchText=&CSRFToken=8ab9292a-389d-40b3-979a-4a7815959e3a")
-cont = req.content
-soup = BeautifulSoup(cont,"html.parser")
 
-bbs = soup.find("div",{"class":"bbs"})
-tds = bbs.findAll("tr")
 
-lists = []
-for td in tds:
-    nums = td.findAll("td")
-    for num in nums:
-        wwww = num.text
-        dict = {wwww}        # 여기에 키값이랑 벨류값 입력하려면, td의 각각의 값을 정의해줘야한느것으로 이해했는데..
-        lists.append(wwww)   # 같은 태그에 여러값이 들어있어서 .. 어떻게 하는지 못찾겠습니다.
 
-file = open("./elecList.json","w+")
-file.write(json.dumps(lists))
+def crawl(num):
+    url = "http://m.keca.or.kr/service/service07.do?menuCd=4051&currentPageNo={}" \
+          "&license=&gubun=page&searchSido=&searchGubun=company&searchText=&CSRFToken=92d2be8b-4d72-419a-a4cd-a21f70a8bd04".format(num)
+    data = requests.get(url)
+    result = data.content
+    return result
 
-df = pd.read_json('./elecList.json')
-print(df)
+
+
+links = []
+
+def parse(pageString):
+    bsObj = BeautifulSoup(pageString,"html.parser")
+    div = bsObj.find("div",{"class":"userList"})
+    lis = div.findAll('li')
+    for li in lis:
+        link = li.find('a')['onclick'].replace("javascript:js_detailAction('","").replace("');","")
+        links.append(link)
+    return links
+
+def crawl_2(link):
+    url = "http://www.keca.or.kr/ecic/ad/ad0101D.do?menuCd=6047&currentPageNo=1&license={}&gubun=detail&sido=51&hoeyn=&searchSido=&searchSigungu=&searchGubun=company&searchText=&CSRFToken=8ab9292a-389d-40b3-979a-4a7815959e3a".format(link)
+    req = requests.get(url)
+    cont = req.content
+    return cont
+
+def parse_2(fanalPage):
+    soup = BeautifulSoup(fanalPage, "html.parser")
+    bbs = soup.find("div", {"class": "bbs"})
+    trs = bbs.findAll("tr")
+
+    lists = []
+    for tr in trs:
+        nums = tr.findAll("td")
+        for num in nums:
+            info = num.text
+            lists.append(info)  # 인포를 리스트에 넣고
+
+    dict = {"등록번호": lists[0],  # 딕셔너리해서 각각의 값을 불러온다
+            "등록일":lists[1],
+            "관할시도회": lists[2],
+            "상호": lists[3],
+            "대표자": lists[4],
+            "소재지": lists[5],
+            "전화번호": lists[6],
+            "팩스번호": lists[7],
+            "시공능력평가액": lists[8],
+            "지역순위": lists[9],
+            "전국순위": lists[10],
+            }
+    return dict
+
+def save(filename):
+    data = filename
+    dataframe = pd.DataFrame(data)
+    dataframe.to_csv('elec.csv', encoding='ms949', header=False, index=False)
+
+# import csv
+
+# def save(filename):
+#     data = filename
+#     csvfile = open('ddddd.csv', 'w', newline="")
+#     csvwriter = csv.writer(csvfile)
+#     for row in data:
+#         csvwriter.writerow(row)
+#     csvfile.close()
+#
+
+
+codes = []
+for num in range(1,3):
+    time.sleep(0.5)
+    pageString = crawl(num)
+    lists = parse(pageString)   #여기에 리스트값은 뭐에 쓰는거임?
+    for link in links:
+        fanalPage = crawl_2(link)
+        info = parse_2(fanalPage)
+        codes.append(info)
+
+print(codes)
+save(codes)
